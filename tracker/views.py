@@ -6,6 +6,8 @@ from django.db.models import Sum
 from datetime import date, timedelta
 from .models import DailyEntry
 from .serializers import DailyEntrySerializer
+from django.contrib.auth.models import User
+from rest_framework.authtoken.models import Token
 
 class EntryListCreateView(generics.ListCreateAPIView):
     serializer_class   = DailyEntrySerializer
@@ -42,3 +44,22 @@ class DashboardStatsView(APIView):
             streak  += 1
             current -= timedelta(days=1)
         return streak
+    
+
+class RegisterView(APIView):
+    permission_classes = []
+
+    def post(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
+        email    = request.data.get('email', '')
+
+        if not username or not password:
+            return Response({'error': 'Username and password required.'}, status=400)
+
+        if User.objects.filter(username=username).exists():
+            return Response({'error': 'Username already taken.'}, status=400)
+
+        user  = User.objects.create_user(username=username, password=password, email=email)
+        token = Token.objects.create(user=user)
+        return Response({'token': token.key, 'username': user.username}, status=201)
