@@ -127,3 +127,56 @@ async function submitRegister() {
         errDiv.innerHTML = `<div class="alert-error">${data.error || 'Registration failed.'}</div>`;
     }
 }
+
+// Login page
+function renderLogin(app) {
+    if (getToken()) { window.location.href = '/dashboard'; return; }
+    app.innerHTML = `
+        <div style="max-width:480px;margin:60px auto">
+            <div class="section-title">// login</div>
+            <div class="card p-4">
+                <div id="login-error"></div>
+                <div class="mb-3">
+                    <label class="form-label">$ username</label>
+                    <input type="text" id="login-username" class="form-control" placeholder="your_username">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">$ password</label>
+                    <input type="password" id="login-password" class="form-control" placeholder="••••••••">
+                </div>
+                <button onclick="submitLogin()" class="btn btn-primary w-100">
+                    run login.py →
+                </button>
+                <p style="color:var(--muted);font-size:0.78rem;margin-top:12px;text-align:center">
+                    No account? <a href="/register" style="color:var(--green)">register</a>
+                </p>
+            </div>
+        </div>
+    `;
+}
+
+async function submitLogin() {
+    const username = document.getElementById('login-username').value.trim();
+    const password = document.getElementById('login-password').value.trim();
+    const errDiv   = document.getElementById('login-error');
+
+    if (!username || !password) {
+        errDiv.innerHTML = '<div class="alert-error">Username and password required.</div>';
+        return;
+    }
+
+    const res  = await fetch(`${API_BASE}/login/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+        localStorage.setItem('grind_token', data.token);
+        localStorage.setItem('grind_user',  username);
+        window.location.href = '/dashboard';
+    } else {
+        errDiv.innerHTML = '<div class="alert-error">Invalid username or password.</div>';
+    }
+}
