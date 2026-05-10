@@ -69,3 +69,61 @@ function renderHome(app) {
 }
 
 document.addEventListener('DOMContentLoaded', router);
+
+// Register page
+function renderRegister(app) {
+    if (getToken()) { window.location.href = '/dashboard'; return; }
+    app.innerHTML = `
+        <div style="max-width:480px;margin:60px auto">
+            <div class="section-title">// register</div>
+            <div class="card p-4">
+                <div id="reg-error"></div>
+                <div class="mb-3">
+                    <label class="form-label">$ username</label>
+                    <input type="text" id="reg-username" class="form-control" placeholder="your_username">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">$ email</label>
+                    <input type="email" id="reg-email" class="form-control" placeholder="you@example.com">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">$ password</label>
+                    <input type="password" id="reg-password" class="form-control" placeholder="••••••••">
+                </div>
+                <button onclick="submitRegister()" class="btn btn-success w-100">
+                    run register.py →
+                </button>
+                <p style="color:var(--muted);font-size:0.78rem;margin-top:12px;text-align:center">
+                    Already have an account? <a href="/login" style="color:var(--blue)">login</a>
+                </p>
+            </div>
+        </div>
+    `;
+}
+
+async function submitRegister() {
+    const username = document.getElementById('reg-username').value.trim();
+    const email    = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-password').value.trim();
+    const errDiv   = document.getElementById('reg-error');
+
+    if (!username || !password) {
+        errDiv.innerHTML = '<div class="alert-error">Username and password required.</div>';
+        return;
+    }
+
+    const res  = await fetch(`${API_BASE}/register/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email, password })
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+        localStorage.setItem('grind_token', data.token);
+        localStorage.setItem('grind_user',  data.username);
+        window.location.href = '/dashboard';
+    } else {
+        errDiv.innerHTML = `<div class="alert-error">${data.error || 'Registration failed.'}</div>`;
+    }
+}
