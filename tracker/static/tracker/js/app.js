@@ -207,6 +207,14 @@ async function renderDashboard(app) {
                 </div>
             </div>
         </div>
+        <div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="section-title">// hours.chart</div>
+        <div class="card p-3">
+            <canvas id="grind-chart" height="80"></canvas>
+        </div>
+    </div>
+</div>
         <div class="row g-3">
             <div class="col-md-7">
                 <div class="section-title">// recent entries</div>
@@ -248,6 +256,7 @@ async function renderDashboard(app) {
 
     loadStats();
     loadEntries();
+    loadChart();
 }
 
 async function loadStats() {
@@ -320,4 +329,43 @@ async function submitEntry() {
         const data = await res.json();
         errDiv.innerHTML = `<div class="alert-error">${JSON.stringify(data)}</div>`;
     }
+}
+
+// Add chart after loadEntries() call in renderDashboard
+async function loadChart() {
+    const res     = await fetch(`${API_BASE}/entries/`, {
+        headers: { 'Authorization': `Token ${getToken()}` }
+    });
+    const entries = await res.json();
+    if (!entries.length) return;
+
+    const labels = entries.slice(0,7).reverse().map(e => e.date);
+    const hours  = entries.slice(0,7).reverse().map(e => parseFloat(e.hours_coded));
+
+    const existing = document.getElementById('grind-chart');
+    if (!existing) return;
+
+    new Chart(existing, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                label:           'Hours Coded',
+                data:            hours,
+                borderColor:     '#3fb950',
+                backgroundColor: 'rgba(63,185,80,0.1)',
+                borderWidth:     2,
+                tension:         0.4,
+                fill:            true,
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { labels: { color: '#8b949e', font: { family: 'JetBrains Mono' } } } },
+            scales: {
+                x: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } },
+                y: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } }
+            }
+        }
+    });
 }
