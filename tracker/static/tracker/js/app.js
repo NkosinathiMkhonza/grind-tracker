@@ -1,3 +1,10 @@
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return '';
+}
+
 const API_BASE = '/api';
 
 // Get token from localStorage
@@ -114,7 +121,10 @@ async function submitRegister() {
 
     const res  = await fetch(`${API_BASE}/register/`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+    'Content-Type': 'application/json',
+    'X-CSRFToken': getCookie('csrftoken')
+},
         body: JSON.stringify({ username, email, password })
     });
     const data = await res.json();
@@ -167,7 +177,10 @@ async function submitLogin() {
 
     const res  = await fetch(`${API_BASE}/login/`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+    'Content-Type': 'application/json',
+    'X-CSRFToken': getCookie('csrftoken')
+},
         body: JSON.stringify({ username, password })
     });
     const data = await res.json();
@@ -261,7 +274,10 @@ async function renderDashboard(app) {
 
 async function loadStats() {
     const res  = await fetch(`${API_BASE}/stats/`, {
-        headers: { 'Authorization': `Token ${getToken()}` }
+        headers: {
+    'Content-Type': 'application/json',
+    'X-CSRFToken': getCookie('csrftoken')
+},
     });
     const data = await res.json();
     document.getElementById('stat-hours').textContent  = data.total_hours || 0;
@@ -271,7 +287,10 @@ async function loadStats() {
 
 async function loadEntries() {
     const res     = await fetch(`${API_BASE}/entries/`, {
-        headers: { 'Authorization': `Token ${getToken()}` }
+       headers: {
+    'Content-Type': 'application/json',
+    'X-CSRFToken': getCookie('csrftoken')
+},
     });
     const entries = await res.json();
     const list    = document.getElementById('entries-list');
@@ -334,7 +353,10 @@ async function submitEntry() {
 // Add chart after loadEntries() call in renderDashboard
 async function loadChart() {
     const res     = await fetch(`${API_BASE}/entries/`, {
-        headers: { 'Authorization': `Token ${getToken()}` }
+        headers: {
+    'Content-Type': 'application/json',
+    'X-CSRFToken': getCookie('csrftoken')
+},
     });
     const entries = await res.json();
     if (!entries.length) return;

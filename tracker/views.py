@@ -63,3 +63,11 @@ class RegisterView(APIView):
         user  = User.objects.create_user(username=username, password=password, email=email)
         token = Token.objects.create(user=user)
         return Response({'token': token.key, 'username': user.username}, status=201)
+    
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+
+@method_decorator(csrf_exempt, name='dispatch')
+class RegisterView(APIView):
+    permission_classes = []
+    ...
