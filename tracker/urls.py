@@ -6,5 +6,6 @@ urlpatterns = [
     path('entries/<int:pk>/',EntryDetailView.as_view(),     name='entry-detail'),
     path('stats/',           DashboardStatsView.as_view(),  name='dashboard-stats'),
     path('register/',        RegisterView.as_view(),        name='register'),
+    path('logout/',           LogoutView.as_view(),          name='logout'),
 ]
 
