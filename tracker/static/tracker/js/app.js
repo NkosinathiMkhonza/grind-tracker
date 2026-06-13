@@ -301,16 +301,24 @@ async function loadEntries() {
     }
 
     list.innerHTML = entries.map(e => `
-        <div class="entry-row">
-            <div class="d-flex justify-content-between align-items-center">
-                <span style="color:var(--blue);font-size:0.85rem">${e.date}</span>
+    <div class="entry-row">
+        <div class="d-flex justify-content-between align-items-center">
+            <span style="color:var(--blue);font-size:0.85rem">${e.date}</span>
+            <div class="d-flex align-items-center gap-2">
                 <span style="color:var(--muted);font-size:0.75rem">
                     ${e.hours_coded}h · ${e.applications_sent} apps
                 </span>
+                <button onclick="deleteEntry(${e.id})"
+                    style="background:transparent;border:1px solid var(--red);
+                    color:var(--red);font-family:'JetBrains Mono',monospace;
+                    font-size:0.68rem;padding:2px 8px;border-radius:4px;cursor:pointer">
+                    delete
+                </button>
             </div>
-            ${e.notes ? `<p style="color:var(--muted);font-size:0.78rem;margin-top:6px;margin-bottom:0">${e.notes}</p>` : ''}
         </div>
-    `).join('');
+        ${e.notes ? `<p style="color:var(--muted);font-size:0.78rem;margin-top:6px;margin-bottom:0">${e.notes}</p>` : ''}
+    </div>
+`).join('');
 }
 
 async function submitEntry() {
@@ -390,4 +398,14 @@ async function loadChart() {
             }
         }
     });
+}
+async function deleteEntry(id) {
+    if (!confirm('Delete this entry?')) return;
+    await fetch(`${API_BASE}/entries/${id}/`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Token ${getToken()}` }
+    });
+    loadStats();
+    loadEntries();
+    loadChart();
 }
