@@ -409,3 +409,61 @@ async function deleteEntry(id) {
     loadEntries();
     loadChart();
 }
+
+function showEditModal(entry) {
+    const existing = document.getElementById('edit-modal');
+    if (existing) existing.remove();
+    const modal = document.createElement('div');
+    modal.id = 'edit-modal';
+    modal.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.7);
+        display:flex;align-items:center;justify-content:center;z-index:1000;`;
+    modal.innerHTML = `
+        <div style="background:var(--surface);border:1px solid var(--border);
+            border-radius:8px;padding:24px;width:90%;max-width:480px;">
+            <div class="section-title">// edit entry — ${entry.date}</div>
+            <div id="edit-error"></div>
+            <div class="mb-3">
+                <label class="form-label">$ hours_coded</label>
+                <input type="number" id="edit-hours" class="form-control"
+                    value="${entry.hours_coded}" step="0.5" min="0" max="24">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">$ applications_sent</label>
+                <input type="number" id="edit-apps" class="form-control"
+                    value="${entry.applications_sent}" min="0">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">$ notes</label>
+                <textarea id="edit-notes" class="form-control" rows="3">${entry.notes || ''}</textarea>
+            </div>
+            <div class="d-flex gap-2">
+                <button onclick="submitEdit(${entry.id})" class="btn btn-success flex-fill">
+                    save changes →
+                </button>
+                <button onclick="document.getElementById('edit-modal').remove()"
+                    class="btn btn-primary">cancel</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+async function submitEdit(id) {
+    const body = {
+        hours_coded:       document.getElementById('edit-hours').value,
+        applications_sent: document.getElementById('edit-apps').value,
+        notes:             document.getElementById('edit-notes').value,
+    };
+    const res = await fetch(`${API_BASE}/entries/${id}/`, {
+        method:  'PATCH',
+        headers: {
+            'Content-Type':  'application/json',
+            'Authorization': `Token ${getToken()}`
+        },
+        body: JSON.stringify(body)
+    });
+    if (res.ok) {
+        document.getElementById('edit-modal').remove();
+        loadStats(); loadEntries(); loadChart();
+    }
+}
