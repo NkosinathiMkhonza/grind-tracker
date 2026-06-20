@@ -314,6 +314,12 @@ async function loadEntries() {
                     font-size:0.68rem;padding:2px 8px;border-radius:4px;cursor:pointer">
                     delete
                 </button>
+                <button onclick="showEditModal(${JSON.stringify(e).replace(/"/g, '&quot;')})"
+    style="background:transparent;border:1px solid var(--blue);
+    color:var(--blue);font-family:'JetBrains Mono',monospace;
+    font-size:0.68rem;padding:2px 8px;border-radius:4px;cursor:pointer">
+    edit
+</button>
             </div>
         </div>
         ${e.notes ? `<p style="color:var(--muted);font-size:0.78rem;margin-top:6px;margin-bottom:0">${e.notes}</p>` : ''}
