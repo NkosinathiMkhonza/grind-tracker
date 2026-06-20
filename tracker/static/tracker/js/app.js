@@ -16,14 +16,21 @@ function updateNav() {
     const nav = document.getElementById('nav-auth');
     if (getToken()) {
         nav.innerHTML = `
-            <span style="color:var(--muted);font-size:0.8rem">
+            <a href="/profile" style="color:var(--muted);font-size:0.8rem;
+                text-decoration:none;padding:4px 8px">
                 $ ${getUser()}
-            </span>
-            <button onclick="logout()" class="btn btn-sm" 
+            </a>
+            <a href="/dashboard" class="btn btn-sm btn-success">dashboard</a>
+            <button onclick="logout()" class="btn btn-sm"
                 style="border:1px solid var(--red);color:var(--red);
                 font-family:'JetBrains Mono',monospace">
                 logout
             </button>
+        `;
+    } else {
+        nav.innerHTML = `
+            <a href="/login"    class="btn btn-sm btn-primary">login</a>
+            <a href="/register" class="btn btn-sm btn-success">register</a>
         `;
     }
 }
