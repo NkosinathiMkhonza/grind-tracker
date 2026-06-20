@@ -290,6 +290,16 @@ async function loadStats() {
     const data = await res.json();
     document.getElementById('stat-hours').textContent  = data.total_hours || 0;
     document.getElementById('stat-streak').textContent = data.streak || 0;
+    const streakEl  = document.getElementById('stat-streak');
+const streak    = data.streak || 0;
+streakEl.textContent = streak;
+const messages  = ['start your streak!', 'keep going!', 'on a roll!',
+                   '🔥 fired up!', '🔥🔥 unstoppable!', '🔥🔥🔥 legendary!'];
+const msgIndex  = Math.min(Math.floor(streak / 2), messages.length - 1);
+const msgEl     = document.createElement('div');
+msgEl.style.cssText = 'font-size:0.68rem;color:var(--muted);margin-top:4px';
+msgEl.textContent   = messages[msgIndex];
+streakEl.parentElement.appendChild(msgEl);
     document.getElementById('stat-apps').textContent   = data.total_applications || 0;
 }
 
