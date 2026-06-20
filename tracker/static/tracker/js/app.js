@@ -44,6 +44,7 @@ function router() {
     else if (path === '/register')          renderRegister(app);
     else if (path === '/login')             renderLogin(app);
     else if (path === '/dashboard')         renderDashboard(app);
+    else if (path === '/profile') renderProfile(app);
     else app.innerHTML = '<p style="color:var(--muted)">404 — page not found</p>';
 }
 
@@ -472,4 +473,57 @@ async function submitEdit(id) {
         document.getElementById('edit-modal').remove();
         loadStats(); loadEntries(); loadChart();
     }
+}
+
+function renderProfile(app) {
+    if (!getToken()) { window.location.href = '/login'; return; }
+    app.innerHTML = `
+        <div style="max-width:600px;margin:0 auto">
+            <div class="section-title">// profile — ${getUser()}</div>
+            <div class="card p-4">
+                <div style="font-size:1.2rem;font-weight:700;color:var(--fg);margin-bottom:4px">
+                    ${getUser()}
+                </div>
+                <div style="color:var(--muted);font-size:0.8rem;margin-bottom:20px">
+                    grind-tracker user
+                </div>
+                <div id="profile-stats"></div>
+                <button onclick="logout()" class="btn mt-4"
+                    style="border:1px solid var(--red);color:var(--red);
+                    font-family:'JetBrains Mono',monospace;width:100%">
+                    $ logout →
+                </button>
+            </div>
+        </div>
+    `;
+    loadProfileStats();
+}
+
+async function loadProfileStats() {
+    const res  = await fetch(`${API_BASE}/stats/`, {
+        headers: { 'Authorization': `Token ${getToken()}` }
+    });
+    const data = await res.json();
+    document.getElementById('profile-stats').innerHTML = `
+        <div class="row g-3">
+            <div class="col-4 text-center">
+                <div style="font-size:1.5rem;font-weight:700;color:var(--blue)">
+                    ${data.total_hours || 0}
+                </div>
+                <div style="font-size:0.72rem;color:var(--muted)">total hours</div>
+            </div>
+            <div class="col-4 text-center">
+                <div style="font-size:1.5rem;font-weight:700;color:var(--green)">
+                    ${data.streak || 0}
+                </div>
+                <div style="font-size:0.72rem;color:var(--muted)">day streak</div>
+            </div>
+            <div class="col-4 text-center">
+                <div style="font-size:1.5rem;font-weight:700;color:var(--yellow)">
+                    ${data.total_applications || 0}
+                </div>
+                <div style="font-size:0.72rem;color:var(--muted)">applications</div>
+            </div>
+        </div>
+    `;
 }
