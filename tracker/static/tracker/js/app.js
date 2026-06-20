@@ -305,44 +305,54 @@ streakEl.parentElement.appendChild(msgEl);
 
 async function loadEntries() {
     const res     = await fetch(`${API_BASE}/entries/`, {
-       headers: {
-    'Content-Type': 'application/json',
-    'X-CSRFToken': getCookie('csrftoken')
-},
+        headers: { 'Authorization': `Token ${getToken()}` }
     });
     const entries = await res.json();
     const list    = document.getElementById('entries-list');
 
+    // IF no entries exist — show empty state
     if (!entries.length) {
-        list.innerHTML = '<p style="color:var(--muted);font-size:0.82rem">No entries yet. Log your first day!</p>';
-        return;
+        list.innerHTML = `
+            <div style="text-align:center;padding:40px 0">
+                <div style="font-size:2rem;margin-bottom:12px">📋</div>
+                <div style="color:var(--muted);font-size:0.85rem;margin-bottom:16px">
+                    No entries yet. Start logging your grind.
+                </div>
+                <div style="font-family:'JetBrains Mono',monospace;
+                    font-size:0.75rem;color:var(--border)">
+                    $ python log_entry.py --start-today
+                </div>
+            </div>
+        `;
+        return;  // stop here, don't run the map below
     }
 
+    // IF entries exist — show the list with edit and delete buttons
     list.innerHTML = entries.map(e => `
-    <div class="entry-row">
-        <div class="d-flex justify-content-between align-items-center">
-            <span style="color:var(--blue);font-size:0.85rem">${e.date}</span>
-            <div class="d-flex align-items-center gap-2">
-                <span style="color:var(--muted);font-size:0.75rem">
-                    ${e.hours_coded}h · ${e.applications_sent} apps
-                </span>
-                <button onclick="deleteEntry(${e.id})"
-                    style="background:transparent;border:1px solid var(--red);
-                    color:var(--red);font-family:'JetBrains Mono',monospace;
-                    font-size:0.68rem;padding:2px 8px;border-radius:4px;cursor:pointer">
-                    delete
-                </button>
-                <button onclick="showEditModal(${JSON.stringify(e).replace(/"/g, '&quot;')})"
-    style="background:transparent;border:1px solid var(--blue);
-    color:var(--blue);font-family:'JetBrains Mono',monospace;
-    font-size:0.68rem;padding:2px 8px;border-radius:4px;cursor:pointer">
-    edit
-</button>
+        <div class="entry-row">
+            <div class="d-flex justify-content-between align-items-center">
+                <span style="color:var(--blue);font-size:0.85rem">${e.date}</span>
+                <div class="d-flex align-items-center gap-2">
+                    <span style="color:var(--muted);font-size:0.75rem">
+                        ${e.hours_coded}h · ${e.applications_sent} apps
+                    </span>
+                    <button onclick='showEditModal(${JSON.stringify(e).replace(/'/g, "&apos;")})'
+                        style="background:transparent;border:1px solid var(--blue);
+                        color:var(--blue);font-family:'JetBrains Mono',monospace;
+                        font-size:0.68rem;padding:2px 8px;border-radius:4px;cursor:pointer">
+                        edit
+                    </button>
+                    <button onclick="deleteEntry(${e.id})"
+                        style="background:transparent;border:1px solid var(--red);
+                        color:var(--red);font-family:'JetBrains Mono',monospace;
+                        font-size:0.68rem;padding:2px 8px;border-radius:4px;cursor:pointer">
+                        delete
+                    </button>
+                </div>
             </div>
+            ${e.notes ? `<p style="color:var(--muted);font-size:0.78rem;margin-top:6px;margin-bottom:0">${e.notes}</p>` : ''}
         </div>
-        ${e.notes ? `<p style="color:var(--muted);font-size:0.78rem;margin-top:6px;margin-bottom:0">${e.notes}</p>` : ''}
-    </div>
-`).join('');
+    `).join('');
 }
 
 async function submitEntry() {
