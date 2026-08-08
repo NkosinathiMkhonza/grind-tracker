@@ -9,7 +9,37 @@ const API_BASE = '/api';
 
 // Get token from localStorage
 const getToken = () => localStorage.getItem('grind_token');
-const getUser  = () => localStorage.getItem('grind_user');
+const getUser = () => localStorage.getItem('grind_user');
+
+function updateStreakMessage(streak) {
+    const streakEl = document.getElementById('stat-streak');
+
+    if (!streakEl || !streakEl.parentElement) {
+        return;
+    }
+
+    const existingMessage = streakEl.parentElement.querySelector('.streak-message');
+
+    if (existingMessage) {
+        existingMessage.remove();
+    }
+
+    const messages = [
+        'start your streak!',
+        'keep going!',
+        'on a roll!',
+        '🔥 fired up!',
+        '🔥🔥 unstoppable!',
+        '🔥🔥🔥 legendary!',
+    ];
+    const index = Math.min(Math.floor(streak / 2), messages.length - 1);
+    const messageEl = document.createElement('div');
+
+    messageEl.className = 'streak-message';
+    messageEl.style.cssText = 'font-size:0.68rem;color:var(--muted);margin-top:4px';
+    messageEl.textContent = messages[index];
+    streakEl.parentElement.appendChild(messageEl);
+}
 
 // Update navbar based on auth state
 function updateNav() {
@@ -59,25 +89,26 @@ function router() {
 function renderHome(app) {
     if (getToken()) { window.location.href = '/dashboard'; return; }
     app.innerHTML = `
-        <div style="max-width:600px;margin:80px auto;text-align:center">
-            <div style="font-family:'JetBrains Mono',monospace;
-                color:var(--green);font-size:0.8rem;margin-bottom:16px">
-                // daily.grind
-            </div>
-            <h1 style="font-size:2.5rem;font-weight:800;margin-bottom:16px">
-                Track Your Grind
-            </h1>
-            <p style="color:var(--muted);margin-bottom:32px;font-size:0.95rem">
-                Log your daily coding hours, job applications and reflections.
-                Built for developers who code after their day job.
-            </p>
-            <div class="d-flex gap-3 justify-content-center">
-                <a href="/register" class="btn btn-success px-4">
-                    get started →
-                </a>
-                <a href="/login" class="btn btn-primary px-4">
-                    login
-                </a>
+        <div class="page-shell">
+            <div class="hero-panel" style="max-width:680px;margin:40px auto 0">
+                <div style="font-family:'JetBrains Mono',monospace;color:var(--green);font-size:0.8rem;margin-bottom:16px">
+                    // daily.grind
+                </div>
+                <h1 style="font-size:2.35rem;font-weight:800;margin-bottom:16px;line-height:1.2">
+                    Track Your Grind
+                </h1>
+                <p style="color:var(--muted);margin-bottom:28px;font-size:0.95rem;line-height:1.7">
+                    Log your daily coding hours, job applications and reflections.
+                    Built for developers who code after their day job.
+                </p>
+                <div class="d-flex gap-3 justify-content-center flex-wrap">
+                    <a href="/register" class="btn btn-success px-4">
+                        get started →
+                    </a>
+                    <a href="/login" class="btn btn-primary px-4">
+                        login
+                    </a>
+                </div>
             </div>
         </div>
     `;
@@ -89,7 +120,7 @@ document.addEventListener('DOMContentLoaded', router);
 function renderRegister(app) {
     if (getToken()) { window.location.href = '/dashboard'; return; }
     app.innerHTML = `
-        <div style="max-width:480px;margin:60px auto">
+        <div class="page-shell" style="max-width:480px;padding-top:40px">
             <div class="section-title">// register</div>
             <div class="card p-4">
                 <div id="reg-error"></div>
@@ -150,7 +181,7 @@ async function submitRegister() {
 function renderLogin(app) {
     if (getToken()) { window.location.href = '/dashboard'; return; }
     app.innerHTML = `
-        <div style="max-width:480px;margin:60px auto">
+        <div class="page-shell" style="max-width:480px;padding-top:40px">
             <div class="section-title">// login</div>
             <div class="card p-4">
                 <div id="login-error"></div>
@@ -207,100 +238,91 @@ async function renderDashboard(app) {
     if (!getToken()) { window.location.href = '/login'; return; }
 
     app.innerHTML = `
-        <div class="section-title">// dashboard — ${getUser()}</div>
-        <div class="row g-3 mb-4" id="stats-row">
-            <div class="col-md-4">
-                <div class="stat-card">
-                    <div class="stat-value" id="stat-hours">—</div>
-                    <div class="stat-label">hours coded</div>
+        <div class="page-shell">
+            <div class="section-title">// dashboard — ${getUser()}</div>
+            <div class="row g-3 mb-4" id="stats-row">
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-hours">—</div>
+                        <div class="stat-label">hours coded</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card green">
+                        <div class="stat-value" id="stat-streak">—</div>
+                        <div class="stat-label">day streak 🔥</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card yellow">
+                        <div class="stat-value" id="stat-apps">—</div>
+                        <div class="stat-label">applications sent</div>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="stat-card green">
-                    <div class="stat-value" id="stat-streak">—</div>
-                    <div class="stat-label">day streak 🔥</div>
+            <div class="row g-3 mb-4">
+                <div class="col-12">
+                    <div class="section-title">// hours.chart</div>
+                    <div class="card p-3">
+                        <canvas id="grind-chart" height="80"></canvas>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="stat-card yellow">
-                    <div class="stat-value" id="stat-apps">—</div>
-                    <div class="stat-label">applications sent</div>
+            <div class="row g-3">
+                <div class="col-md-7">
+                    <div class="section-title">// recent entries</div>
+                    <div id="entries-list">
+                        <p style="color:var(--muted);font-size:0.82rem">Loading...</p>
+                    </div>
                 </div>
-            </div>
-        </div>
-        <div class="row g-3 mb-4">
-    <div class="col-12">
-        <div class="section-title">// hours.chart</div>
-        <div class="card p-3">
-            <canvas id="grind-chart" height="80"></canvas>
-        </div>
-    </div>
-</div>
-        <div class="row g-3">
-            <div class="col-md-7">
-                <div class="section-title">// recent entries</div>
-                <div id="entries-list">
-                    <p style="color:var(--muted);font-size:0.82rem">Loading...</p>
-                </div>
-            </div>
-            <div class="col-md-5">
-                <div class="section-title">// log today</div>
-                <div class="card p-3">
-                    <div id="entry-error"></div>
-                    <div class="mb-3">
-                        <label class="form-label">$ date</label>
-                        <input type="date" id="entry-date" class="form-control"
-                            value="${new Date().toISOString().split('T')[0]}">
+                <div class="col-md-5">
+                    <div class="section-title">// log today</div>
+                    <div class="card p-3">
+                        <div id="entry-error"></div>
+                        <div class="mb-3">
+                            <label class="form-label">$ date</label>
+                            <input type="date" id="entry-date" class="form-control"
+                                value="${new Date().toISOString().split('T')[0]}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">$ hours_coded</label>
+                            <input type="number" id="entry-hours" class="form-control"
+                                placeholder="2.5" step="0.5" min="0" max="24">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">$ applications_sent</label>
+                            <input type="number" id="entry-apps" class="form-control"
+                                placeholder="5" min="0">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">$ notes</label>
+                            <textarea id="entry-notes" class="form-control" rows="3"
+                                placeholder="What did you work on today?"></textarea>
+                        </div>
+                        <button onclick="submitEntry()" class="btn btn-success w-100">
+                            run log_entry.py →
+                        </button>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">$ hours_coded</label>
-                        <input type="number" id="entry-hours" class="form-control"
-                            placeholder="2.5" step="0.5" min="0" max="24">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">$ applications_sent</label>
-                        <input type="number" id="entry-apps" class="form-control"
-                            placeholder="5" min="0">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">$ notes</label>
-                        <textarea id="entry-notes" class="form-control" rows="3"
-                            placeholder="What did you work on today?"></textarea>
-                    </div>
-                    <button onclick="submitEntry()" class="btn btn-success w-100">
-                        run log_entry.py →
-                    </button>
                 </div>
             </div>
         </div>
     `;
 
-    loadStats();
-    loadEntries();
-    loadChart();
+    await loadStats();
+    await loadEntries();
+    await loadChart();
 }
 
 async function loadStats() {
-    const res  = await fetch(`${API_BASE}/stats/`, {
-        headers: {
-    'Content-Type': 'application/json',
-    'X-CSRFToken': getCookie('csrftoken')
-},
+    const res = await fetch(`${API_BASE}/stats/`, {
+        headers: { Authorization: `Token ${getToken()}` },
     });
     const data = await res.json();
-    document.getElementById('stat-hours').textContent  = data.total_hours || 0;
+
+    document.getElementById('stat-hours').textContent = data.total_hours || 0;
     document.getElementById('stat-streak').textContent = data.streak || 0;
-    const streakEl  = document.getElementById('stat-streak');
-const streak    = data.streak || 0;
-streakEl.textContent = streak;
-const messages  = ['start your streak!', 'keep going!', 'on a roll!',
-                   '🔥 fired up!', '🔥🔥 unstoppable!', '🔥🔥🔥 legendary!'];
-const msgIndex  = Math.min(Math.floor(streak / 2), messages.length - 1);
-const msgEl     = document.createElement('div');
-msgEl.style.cssText = 'font-size:0.68rem;color:var(--muted);margin-top:4px';
-msgEl.textContent   = messages[msgIndex];
-streakEl.parentElement.appendChild(msgEl);
-    document.getElementById('stat-apps').textContent   = data.total_applications || 0;
+    document.getElementById('stat-apps').textContent = data.total_applications || 0;
+    updateStreakMessage(data.streak || 0);
 }
 
 async function loadEntries() {
@@ -310,47 +332,44 @@ async function loadEntries() {
     const entries = await res.json();
     const list    = document.getElementById('entries-list');
 
-    // IF no entries exist — show empty state
     if (!entries.length) {
         list.innerHTML = `
-            <div style="text-align:center;padding:40px 0">
+            <div style="text-align:center;padding:40px 0;border:1px dashed var(--border);border-radius:12px;background:rgba(255,255,255,0.02)">
                 <div style="font-size:2rem;margin-bottom:12px">📋</div>
                 <div style="color:var(--muted);font-size:0.85rem;margin-bottom:16px">
                     No entries yet. Start logging your grind.
                 </div>
-                <div style="font-family:'JetBrains Mono',monospace;
-                    font-size:0.75rem;color:var(--border)">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--border)">
                     $ python log_entry.py --start-today
                 </div>
             </div>
         `;
-        return;  // stop here, don't run the map below
+        return;
     }
 
-    // IF entries exist — show the list with edit and delete buttons
     list.innerHTML = entries.map(e => `
         <div class="entry-row">
-            <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex justify-content-between align-items-start gap-2">
                 <span style="color:var(--blue);font-size:0.85rem">${e.date}</span>
-                <div class="d-flex align-items-center gap-2">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
                     <span style="color:var(--muted);font-size:0.75rem">
                         ${e.hours_coded}h · ${e.applications_sent} apps
                     </span>
                     <button onclick='showEditModal(${JSON.stringify(e).replace(/'/g, "&apos;")})'
                         style="background:transparent;border:1px solid var(--blue);
                         color:var(--blue);font-family:'JetBrains Mono',monospace;
-                        font-size:0.68rem;padding:2px 8px;border-radius:4px;cursor:pointer">
+                        font-size:0.68rem;padding:2px 8px;border-radius:6px;cursor:pointer">
                         edit
                     </button>
                     <button onclick="deleteEntry(${e.id})"
                         style="background:transparent;border:1px solid var(--red);
                         color:var(--red);font-family:'JetBrains Mono',monospace;
-                        font-size:0.68rem;padding:2px 8px;border-radius:4px;cursor:pointer">
+                        font-size:0.68rem;padding:2px 8px;border-radius:6px;cursor:pointer">
                         delete
                     </button>
                 </div>
             </div>
-            ${e.notes ? `<p style="color:var(--muted);font-size:0.78rem;margin-top:6px;margin-bottom:0">${e.notes}</p>` : ''}
+            ${e.notes ? `<p style="color:var(--muted);font-size:0.78rem;margin-top:8px;margin-bottom:0;line-height:1.6">${e.notes}</p>` : ''}
         </div>
     `).join('');
 }
@@ -383,8 +402,9 @@ async function submitEntry() {
         document.getElementById('entry-hours').value = '';
         document.getElementById('entry-apps').value  = '';
         document.getElementById('entry-notes').value = '';
-        loadStats();
-        loadEntries();
+        await loadStats();
+        await loadEntries();
+        await loadChart();
         setTimeout(() => errDiv.innerHTML = '', 3000);
     } else {
         const data = await res.json();
@@ -394,11 +414,8 @@ async function submitEntry() {
 
 // Add chart after loadEntries() call in renderDashboard
 async function loadChart() {
-    const res     = await fetch(`${API_BASE}/entries/`, {
-        headers: {
-    'Content-Type': 'application/json',
-    'X-CSRFToken': getCookie('csrftoken')
-},
+    const res = await fetch(`${API_BASE}/entries/`, {
+        headers: { Authorization: `Token ${getToken()}` },
     });
     const entries = await res.json();
     if (!entries.length) return;
@@ -434,14 +451,18 @@ async function loadChart() {
     });
 }
 async function deleteEntry(id) {
-    if (!confirm('Delete this entry?')) return;
+    if (!confirm('Delete this entry?')) {
+        return;
+    }
+
     await fetch(`${API_BASE}/entries/${id}/`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Token ${getToken()}` }
+        headers: { Authorization: `Token ${getToken()}` },
     });
-    loadStats();
-    loadEntries();
-    loadChart();
+
+    await loadStats();
+    await loadEntries();
+    await loadChart();
 }
 
 function showEditModal(entry) {
@@ -449,11 +470,11 @@ function showEditModal(entry) {
     if (existing) existing.remove();
     const modal = document.createElement('div');
     modal.id = 'edit-modal';
-    modal.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.7);
-        display:flex;align-items:center;justify-content:center;z-index:1000;`;
+    modal.style.cssText = `position:fixed;inset:0;background:rgba(2,5,10,0.75);
+        display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(10px);`;
     modal.innerHTML = `
-        <div style="background:var(--surface);border:1px solid var(--border);
-            border-radius:8px;padding:24px;width:90%;max-width:480px;">
+        <div style="background:linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));border:1px solid var(--border);
+            border-radius:14px;padding:24px;width:90%;max-width:480px;box-shadow:0 20px 50px rgba(0,0,0,0.24);">
             <div class="section-title">// edit entry — ${entry.date}</div>
             <div id="edit-error"></div>
             <div class="mb-3">
@@ -484,28 +505,32 @@ function showEditModal(entry) {
 
 async function submitEdit(id) {
     const body = {
-        hours_coded:       document.getElementById('edit-hours').value,
+        hours_coded: document.getElementById('edit-hours').value,
         applications_sent: document.getElementById('edit-apps').value,
-        notes:             document.getElementById('edit-notes').value,
+        notes: document.getElementById('edit-notes').value,
     };
+
     const res = await fetch(`${API_BASE}/entries/${id}/`, {
-        method:  'PATCH',
+        method: 'PATCH',
         headers: {
-            'Content-Type':  'application/json',
-            'Authorization': `Token ${getToken()}`
+            'Content-Type': 'application/json',
+            Authorization: `Token ${getToken()}`,
         },
-        body: JSON.stringify(body)
+        body: JSON.stringify(body),
     });
+
     if (res.ok) {
         document.getElementById('edit-modal').remove();
-        loadStats(); loadEntries(); loadChart();
+        await loadStats();
+        await loadEntries();
+        await loadChart();
     }
 }
 
 function renderProfile(app) {
     if (!getToken()) { window.location.href = '/login'; return; }
     app.innerHTML = `
-        <div style="max-width:600px;margin:0 auto">
+        <div class="page-shell" style="max-width:620px;padding-top:28px">
             <div class="section-title">// profile — ${getUser()}</div>
             <div class="card p-4">
                 <div style="font-size:1.2rem;font-weight:700;color:var(--fg);margin-bottom:4px">
