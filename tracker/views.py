@@ -19,8 +19,23 @@ class EntryListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         return DailyEntry.objects.filter(user=self.request.user)
 
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        entry, created = DailyEntry.objects.update_or_create(
+            user=request.user,
+            date=serializer.validated_data['date'],
+            defaults={
+                'hours_coded': serializer.validated_data['hours_coded'],
+                'applications_sent': serializer.validated_data.get('applications_sent', 0),
+                'notes': serializer.validated_data.get('notes', ''),
+            },
+        )
+        response_serializer = self.get_serializer(entry)
+        return Response(
+            response_serializer.data,
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
+        )
 
 
 class EntryDetailView(generics.RetrieveUpdateDestroyAPIView):
